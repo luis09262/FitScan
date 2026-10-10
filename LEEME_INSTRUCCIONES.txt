@@ -1,0 +1,6 @@
+# Proyecto Independiente: Proyecto_GymRat_App
+Fecha de creación: 2026-10-09 15:16:17
+
+Este directorio es 100% exclusivo y auto-contenido.
+Todo script, código y entregable de esta sesión pertenece aquí.
+Archivos auxiliares o de prueba van en '_temp/'.

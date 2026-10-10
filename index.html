@@ -1,0 +1,827 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FitScan — Escanea. Analiza. Decide.</title>
+<meta name="description" content="FitScan escanea el código de barras de cualquier producto y te da el veredicto al instante: proteína neta, Nutri-Score, NOVA y macros reales. La app para los que entrenan en serio.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#ffffff;
+    --bg-soft:#f8fafc;
+    --bg-muted:#f1f5f9;
+    --card:#ffffff;
+    --border:#e2e8f0;
+    --border-strong:#cbd5e1;
+    --txt:#0f172a;
+    --txt-2:#475569;
+    --txt-3:#94a3b8;
+    --primary:#ea580c;
+    --primary-2:#f97316;
+    --primary-soft:#fff7ed;
+    --primary-ring:rgba(234,88,12,.12);
+    --blue:#0284c7;
+    --blue-soft:#f0f9ff;
+    --green:#16a34a;
+    --green-soft:#f0fdf4;
+    --yellow:#ca8a04;
+    --yellow-soft:#fefce8;
+    --red:#dc2626;
+    --red-soft:#fef2f2;
+    --shadow-sm:0 1px 2px rgba(15,23,42,.05);
+    --shadow:0 4px 16px rgba(15,23,42,.06);
+    --shadow-lg:0 20px 40px rgba(15,23,42,.08);
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    font-family:'Inter',system-ui,-apple-system,sans-serif;
+    background:var(--bg);
+    color:var(--txt);
+    line-height:1.65;
+    overflow-x:hidden;
+    -webkit-font-smoothing:antialiased;
+    font-size:16px;
+  }
+  h1,h2,h3,h4,h5{font-family:'Plus Jakarta Sans',sans-serif;letter-spacing:-.02em;line-height:1.15;color:var(--txt)}
+  .mono{font-family:'JetBrains Mono',monospace}
+  .container{max-width:1200px;margin:0 auto;padding:0 24px}
+
+  /* ---------- NAV ---------- */
+  nav{
+    position:fixed;top:0;left:0;right:0;z-index:100;
+    padding:14px 0;
+    background:rgba(255,255,255,.85);
+    backdrop-filter:blur(16px);
+    -webkit-backdrop-filter:blur(16px);
+    border-bottom:1px solid transparent;
+    transition:.3s;
+  }
+  nav.scrolled{border-bottom-color:var(--border);background:rgba(255,255,255,.95)}
+  .nav-inner{display:flex;align-items:center;justify-content:space-between;gap:24px}
+  .logo{display:flex;align-items:center;gap:10px;font-family:'Plus Jakarta Sans';font-size:22px;font-weight:800;letter-spacing:-.03em;color:var(--txt);text-decoration:none}
+  .logo-mark{
+    width:36px;height:36px;border-radius:10px;
+    background:linear-gradient(135deg,var(--primary),var(--primary-2));
+    display:grid;place-items:center;
+    box-shadow:0 4px 12px var(--primary-ring);
+  }
+  .logo-mark svg{width:20px;height:20px}
+  .logo em{font-style:normal;color:var(--primary)}
+  .nav-links{display:flex;gap:30px;font-size:14.5px;font-weight:500;color:var(--txt-2)}
+  .nav-links a{color:inherit;text-decoration:none;transition:.2s}
+  .nav-links a:hover{color:var(--primary)}
+  .btn{
+    display:inline-flex;align-items:center;gap:9px;
+    padding:12px 22px;border-radius:10px;
+    font-weight:600;font-size:14.5px;text-decoration:none;
+    border:none;cursor:pointer;transition:.25s;white-space:nowrap;
+    font-family:'Inter',sans-serif;
+  }
+  .btn-primary{
+    background:var(--primary);
+    color:#fff;
+    box-shadow:0 4px 14px var(--primary-ring);
+  }
+  .btn-primary:hover{background:#c2410c;transform:translateY(-1px);box-shadow:0 8px 20px var(--primary-ring)}
+  .btn-ghost{background:#fff;color:var(--txt);border:1px solid var(--border-strong)}
+  .btn-ghost:hover{border-color:var(--primary);color:var(--primary)}
+  .menu-btn{display:none;background:none;border:none;color:var(--txt);font-size:22px;cursor:pointer;padding:4px 8px}
+
+  /* ---------- HERO ---------- */
+  .hero{
+    padding:140px 0 80px;
+    background:linear-gradient(180deg,#fef3ec 0%,#ffffff 60%);
+    position:relative;
+    overflow:hidden;
+  }
+  .hero::before{
+    content:'';position:absolute;top:-150px;right:-150px;width:500px;height:500px;
+    background:radial-gradient(circle,rgba(249,115,22,.10),transparent 70%);
+    pointer-events:none;
+  }
+  .hero-inner{display:grid;grid-template-columns:1.05fr .95fr;gap:60px;align-items:center;position:relative}
+  .badge{
+    display:inline-flex;align-items:center;gap:8px;
+    padding:7px 14px;border-radius:100px;
+    background:var(--primary-soft);border:1px solid rgba(234,88,12,.2);
+    font-size:12.5px;font-weight:600;color:var(--primary);
+    margin-bottom:22px;
+  }
+  .badge .dot{width:6px;height:6px;border-radius:50%;background:var(--primary);animation:pulse 2s infinite}
+  @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(1.4)}}
+  .hero h1{
+    font-size:clamp(40px,5.2vw,66px);
+    font-weight:800;
+    margin-bottom:22px;
+    color:var(--txt);
+  }
+  .hero h1 em{font-style:normal;color:var(--primary)}
+  .hero p.lead{font-size:18px;color:var(--txt-2);max-width:540px;margin-bottom:32px;line-height:1.6}
+  .hero-cta{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:36px}
+  .hero-stats{display:flex;gap:40px;padding-top:28px;border-top:1px solid var(--border)}
+  .hero-stats .stat-num{font-family:'Plus Jakarta Sans';font-size:30px;font-weight:800;color:var(--txt);line-height:1}
+  .hero-stats .stat-num span{color:var(--primary)}
+  .hero-stats .stat-lbl{font-size:12.5px;color:var(--txt-3);font-weight:500;margin-top:6px}
+
+  /* ---------- PHONE MOCKUP ---------- */
+  .phone-wrap{display:flex;justify-content:center;position:relative}
+  .phone-wrap::before{
+    content:'';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+    width:420px;height:420px;border-radius:50%;
+    background:radial-gradient(circle,rgba(249,115,22,.14),transparent 65%);
+    filter:blur(30px);z-index:-1;
+  }
+  .phone{
+    width:300px;height:620px;border-radius:42px;
+    background:#1e293b;
+    padding:8px;
+    box-shadow:0 30px 60px rgba(15,23,42,.18), 0 0 0 1px rgba(15,23,42,.08);
+    position:relative;
+    animation:float 6s ease-in-out infinite;
+  }
+  @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-14px)}}
+  .screen{width:100%;height:100%;border-radius:34px;padding:30px 14px 14px;display:flex;flex-direction:column;gap:9px;background:#f8fafc;overflow:hidden;position:relative}
+  .notch{position:absolute;top:8px;left:50%;transform:translateX(-50%);width:90px;height:22px;background:#1e293b;border-radius:0 0 14px 14px;z-index:10}
+  .ph-header{display:flex;align-items:center;gap:8px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+  .ph-header .back{color:var(--txt);font-size:16px}
+  .ph-header .title{font-size:13px;font-weight:700;flex:1;text-align:center;color:var(--txt)}
+  .ph-header .book{color:var(--txt-3);font-size:14px}
+  .ph-product{background:#fff;border:1px solid var(--border);border-radius:12px;padding:10px;display:flex;gap:10px;align-items:center}
+  .ph-product .img{width:48px;height:48px;border-radius:9px;background:linear-gradient(135deg,#7a1f1f,#4a1010);display:grid;place-items:center;font-size:18px;flex-shrink:0}
+  .ph-product .info{flex:1;min-width:0}
+  .ph-product .brand{font-size:9.5px;color:var(--blue);font-weight:600}
+  .ph-product .name{font-size:12.5px;font-weight:800;margin:1px 0 4px;color:var(--txt)}
+  .ph-product .barcode{font-family:'JetBrains Mono';font-size:8.5px;color:var(--txt-3);background:var(--bg-muted);padding:2px 6px;border-radius:4px;display:inline-block}
+  .ph-tags{display:flex;gap:5px;margin-top:7px}
+  .ph-tag{font-size:8.5px;font-weight:700;padding:4px 8px;border-radius:6px;border:1px solid}
+  .ph-tag.e{color:#c2410c;border-color:rgba(234,88,12,.35);background:#fff7ed}
+  .ph-verdict{background:linear-gradient(135deg,#fff7ed,#f0f9ff);border:1px solid rgba(2,132,199,.25);border-radius:12px;padding:11px}
+  .ph-verdict .vhead{display:flex;align-items:center;gap:7px;margin-bottom:7px}
+  .ph-verdict .vicon{width:26px;height:26px;border-radius:50%;background:var(--blue);display:grid;place-items:center;font-size:13px;color:#fff}
+  .ph-verdict .vtitle{font-size:8.5px;font-weight:800;color:var(--blue);letter-spacing:.4px}
+  .ph-verdict .vlabel{font-size:10.5px;font-weight:800;margin-top:1px;color:var(--txt)}
+  .ph-verdict .stars{color:#f59e0b;font-size:11px;letter-spacing:1px;margin-left:auto}
+  .ph-verdict .vdesc{font-size:9px;color:var(--txt-2);margin-bottom:9px;line-height:1.4}
+  .ph-macros{display:grid;grid-template-columns:1fr 1fr;gap:6px;background:rgba(255,255,255,.6);border-radius:8px;padding:8px}
+  .ph-macro .lbl{font-size:7.5px;color:var(--txt-3);font-weight:600}
+  .ph-macro .val{font-family:'Plus Jakarta Sans';font-size:15px;font-weight:800;color:var(--blue);margin-top:1px}
+  .ph-macro .val.green{color:var(--green)}
+  .ph-macro .sub{font-size:7px;color:var(--txt-3)}
+  .ph-section-title{font-size:8.5px;font-weight:800;color:var(--txt-3);letter-spacing:1px;margin-top:4px}
+  .ph-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+  .ph-cell{background:#fff;border:1px solid var(--border);border-radius:9px;padding:7px}
+  .ph-cell .clbl{font-size:8px;color:var(--txt-2);font-weight:600}
+  .ph-cell .cval{font-family:'Plus Jakarta Sans';font-size:14px;font-weight:800;margin-top:2px;color:var(--txt)}
+  .ph-cell .cval.kcal{color:var(--primary)}
+  .ph-cell .cval.prot{color:var(--blue)}
+  .ph-cell .cval.carb{color:#65a30d}
+  .ph-cell .cval.fat{color:var(--yellow)}
+  .ph-cell .pct{font-size:7px;color:var(--txt-3);float:right;font-weight:700}
+  .ph-bar{height:3px;border-radius:3px;background:var(--bg-muted);margin-top:4px;overflow:hidden}
+  .ph-bar i{display:block;height:100%;border-radius:3px}
+  .ph-nav{position:absolute;bottom:0;left:0;right:0;background:rgba(255,255,255,.95);backdrop-filter:blur(10px);border-top:1px solid var(--border);display:flex;justify-content:space-around;padding:7px 4px 10px}
+  .ph-nav-item{display:flex;flex-direction:column;align-items:center;gap:2px;font-size:7px;color:var(--txt-3);font-weight:600;position:relative}
+  .ph-nav-item.active{color:var(--blue)}
+  .ph-nav-item svg{width:15px;height:15px}
+  .ph-nav-badge{position:absolute;top:-4px;right:-6px;background:var(--primary);color:#fff;font-size:6px;font-weight:800;padding:1px 4px;border-radius:6px}
+
+  /* ---------- SECTIONS ---------- */
+  section{padding:90px 0;position:relative}
+  .section-head{text-align:center;max-width:720px;margin:0 auto 56px}
+  .eyebrow{font-size:12.5px;font-weight:700;color:var(--primary);letter-spacing:2.5px;text-transform:uppercase;margin-bottom:14px}
+  .section-head h2{font-size:clamp(30px,3.8vw,46px);font-weight:800;margin-bottom:18px}
+  .section-head p{color:var(--txt-2);font-size:17px}
+
+  /* ---------- FEATURES ---------- */
+  .features-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+  .feat{
+    background:var(--card);border:1px solid var(--border);border-radius:18px;
+    padding:28px;transition:.3s;
+  }
+  .feat:hover{border-color:var(--border-strong);transform:translateY(-4px);box-shadow:var(--shadow-lg)}
+  .feat-icon{
+    width:48px;height:48px;border-radius:12px;display:grid;place-items:center;
+    background:var(--primary-soft);margin-bottom:18px;
+  }
+  .feat-icon svg{width:24px;height:24px}
+  .feat-icon.blue{background:var(--blue-soft)}
+  .feat-icon.lime{background:#f7fee7}
+  .feat h3{font-size:18.5px;font-weight:700;margin-bottom:9px}
+  .feat p{color:var(--txt-2);font-size:14.5px;line-height:1.6}
+  .feat .feat-tag{display:inline-block;margin-top:14px;font-family:'JetBrains Mono';font-size:11px;color:var(--primary);background:var(--primary-soft);padding:3px 10px;border-radius:6px}
+
+  /* ---------- HOW IT WORKS ---------- */
+  .how{background:var(--bg-soft)}
+  .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:32px}
+  .step{text-align:center;padding:32px 20px;background:#fff;border:1px solid var(--border);border-radius:18px}
+  .step-num{
+    width:60px;height:60px;border-radius:16px;margin:0 auto 18px;
+    background:linear-gradient(135deg,var(--primary),var(--primary-2));
+    display:grid;place-items:center;font-family:'Plus Jakarta Sans';font-size:26px;font-weight:800;color:#fff;
+    box-shadow:0 8px 20px var(--primary-ring);
+  }
+  .step h3{font-size:19px;font-weight:700;margin-bottom:9px}
+  .step p{color:var(--txt-2);font-size:14.5px}
+
+  /* ---------- VERDICTS ---------- */
+  .verdicts{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+  .vcard{border-radius:18px;padding:28px;border:1.5px solid;transition:.3s;background:#fff}
+  .vcard:hover{transform:translateY(-4px);box-shadow:var(--shadow-lg)}
+  .vcard.green{border-color:rgba(22,163,74,.35)}
+  .vcard.yellow{border-color:rgba(202,138,4,.35)}
+  .vcard.red{border-color:rgba(220,38,38,.35)}
+  .vcard .vicon{width:52px;height:52px;border-radius:14px;display:grid;place-items:center;font-size:24px;margin-bottom:16px}
+  .vcard.green .vicon{background:var(--green-soft)}
+  .vcard.yellow .vicon{background:var(--yellow-soft)}
+  .vcard.red .vicon{background:var(--red-soft)}
+  .vcard h3{font-size:22px;font-weight:800;margin-bottom:8px;letter-spacing:-.01em}
+  .vcard.green h3{color:var(--green)}
+  .vcard.yellow h3{color:var(--yellow)}
+  .vcard.red h3{color:var(--red)}
+  .vcard p{color:var(--txt-2);font-size:14.5px;margin-bottom:14px;line-height:1.55}
+  .vcard .vlbl{font-size:11.5px;font-weight:700;color:var(--txt-3);letter-spacing:1px;font-family:'JetBrains Mono'}
+
+  /* ---------- STATS BAND ---------- */
+  .stats-band{background:var(--bg-soft);border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
+  .stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;text-align:center}
+  .stat-item .num{font-family:'Plus Jakarta Sans';font-size:clamp(34px,4.5vw,52px);font-weight:800;line-height:1;color:var(--primary)}
+  .stat-item .num span{color:var(--txt)}
+  .stat-item .lbl{font-size:13px;color:var(--txt-2);font-weight:600;margin-top:10px}
+
+  /* ---------- DASHBOARD PREVIEW ---------- */
+  .dash-wrap{display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:center}
+  .dash-visual{background:#fff;border:1px solid var(--border);border-radius:22px;padding:28px;box-shadow:var(--shadow-lg);position:relative;overflow:hidden}
+  .dash-visual::before{content:'';position:absolute;top:-60px;right:-60px;width:200px;height:200px;background:radial-gradient(circle,rgba(249,115,22,.08),transparent 70%);pointer-events:none}
+  .dash-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px}
+  .dash-head h4{font-size:19px;font-weight:800}
+  .dash-head .week{font-size:11px;color:var(--txt-3);font-family:'JetBrains Mono';font-weight:600}
+  .dash-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;font-size:13.5px;font-weight:600}
+  .dash-row .rt{color:var(--txt-2)}
+  .dash-row .rv{font-family:'JetBrains Mono';font-size:12.5px;color:var(--txt-3);font-weight:700}
+  .dash-progress{height:8px;border-radius:8px;background:var(--bg-muted);margin-bottom:18px;overflow:hidden}
+  .dash-progress i{display:block;height:100%;border-radius:8px;transition:width 1s ease}
+  .dash-progress i.kcal{background:linear-gradient(90deg,#fb923c,#ea580c)}
+  .dash-progress i.prot{background:linear-gradient(90deg,#38bdf8,#0284c7)}
+  .dash-progress i.carb{background:linear-gradient(90deg,#a3e635,#65a30d)}
+  .dash-progress i.fat{background:linear-gradient(90deg,#fbbf24,#ca8a04)}
+  .dash-empty{text-align:center;color:var(--txt-3);font-size:12.5px;padding:12px;border:1px dashed var(--border-strong);border-radius:10px;margin-top:6px}
+  .dash-copy h2{font-size:clamp(28px,3.5vw,42px);font-weight:800;margin-bottom:18px}
+  .dash-copy p{color:var(--txt-2);font-size:16.5px;margin-bottom:22px}
+  .dash-list{list-style:none;display:flex;flex-direction:column;gap:13px}
+  .dash-list li{display:flex;gap:11px;align-items:flex-start;font-size:15px;color:var(--txt-2);line-height:1.55}
+  .dash-list .check{width:22px;height:22px;border-radius:6px;background:#dcfce7;color:var(--green);display:grid;place-items:center;flex-shrink:0;font-size:12px;font-weight:800;margin-top:1px}
+
+  /* ---------- LEGAL DISCLAIMER ---------- */
+  .disclaimer-band{
+    background:linear-gradient(180deg,#fff7ed,#ffffff);
+    border-top:1px solid rgba(234,88,12,.15);
+    border-bottom:1px solid rgba(234,88,12,.15);
+    padding:44px 0;
+  }
+  .disclaimer-inner{max-width:1000px;margin:0 auto;display:flex;gap:20px;align-items:flex-start;padding:0 24px}
+  .disclaimer-icon{
+    width:46px;height:46px;border-radius:12px;background:var(--primary-soft);border:1px solid rgba(234,88,12,.25);
+    display:grid;place-items:center;flex-shrink:0;font-size:22px;color:var(--primary);
+  }
+  .disclaimer-text h4{font-size:17px;font-weight:800;color:var(--primary);margin-bottom:8px}
+  .disclaimer-text p{color:var(--txt-2);font-size:14.5px;line-height:1.65}
+  .disclaimer-text p + p{margin-top:8px}
+  .disclaimer-text a{color:var(--primary);font-weight:600;text-decoration:underline}
+
+  /* ---------- CTA ---------- */
+  .cta{background:linear-gradient(135deg,#fff7ed 0%,#fffbf5 100%);border-top:1px solid var(--border)}
+  .cta-inner{text-align:center;max-width:760px;margin:0 auto}
+  .cta-inner h2{font-size:clamp(34px,4.8vw,58px);font-weight:800;margin-bottom:20px;line-height:1.05}
+  .cta-inner h2 span{color:var(--primary)}
+  .cta-inner p{color:var(--txt-2);font-size:17.5px;margin-bottom:32px}
+  .cta-buttons{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
+  .btn-store{background:#0f172a;border:1px solid #0f172a;color:#fff;padding:14px 26px;border-radius:14px;display:inline-flex;align-items:center;gap:14px;text-decoration:none;transition:.3s}
+  .btn-store:hover{background:#1e293b;transform:translateY(-2px);box-shadow:0 12px 24px rgba(15,23,42,.2)}
+  .btn-store svg{width:28px;height:28px;flex-shrink:0}
+  .btn-store .txt{text-align:left}
+  .btn-store .txt small{display:block;font-size:10px;color:#94a3b8;font-weight:500;letter-spacing:.5px}
+  .btn-store .txt strong{font-size:15px;font-weight:700}
+
+  /* ---------- FAQ ---------- */
+  .faq-list{max-width:820px;margin:0 auto;display:flex;flex-direction:column;gap:12px}
+  details{background:#fff;border:1px solid var(--border);border-radius:14px;padding:20px 24px;transition:.3s}
+  details[open]{border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-ring)}
+  details summary{font-weight:700;font-size:16.5px;cursor:pointer;list-style:none;display:flex;justify-content:space-between;align-items:center;gap:16px;color:var(--txt)}
+  details summary::-webkit-details-marker{display:none}
+  details summary::after{content:'+';font-size:22px;color:var(--primary);font-weight:400;transition:.3s;line-height:1}
+  details[open] summary::after{transform:rotate(45deg)}
+  details p{color:var(--txt-2);font-size:15px;margin-top:13px;line-height:1.7}
+
+  /* ---------- FOOTER ---------- */
+  footer{padding:60px 0 32px;border-top:1px solid var(--border);background:var(--bg-soft)}
+  .footer-inner{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:40px;margin-bottom:44px}
+  .footer-brand .logo{margin-bottom:16px}
+  .footer-brand p{color:var(--txt-2);font-size:14px;max-width:320px;line-height:1.6}
+  .footer-col h5{font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:1.5px;color:var(--txt);margin-bottom:16px}
+  .footer-col a{display:block;color:var(--txt-2);text-decoration:none;font-size:14px;margin-bottom:11px;transition:.2s}
+  .footer-col a:hover{color:var(--primary)}
+  .footer-bottom{padding-top:26px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;color:var(--txt-3);font-size:13px;flex-wrap:wrap;gap:14px}
+
+  /* ---------- RESPONSIVE ---------- */
+  @media(max-width:1024px){
+    .hero-inner{grid-template-columns:1fr;gap:50px;text-align:center}
+    .hero p.lead{margin-left:auto;margin-right:auto}
+    .hero-cta{justify-content:center}
+    .hero-stats{justify-content:center;flex-wrap:wrap}
+    .features-grid,.verdicts,.steps{grid-template-columns:repeat(2,1fr)}
+    .dash-wrap{grid-template-columns:1fr;gap:40px}
+    .footer-inner{grid-template-columns:1fr 1fr}
+  }
+  @media(max-width:768px){
+    nav{padding:12px 0}
+    .nav-links{display:none}
+    .nav-links.open{display:flex;position:absolute;top:100%;left:0;right:0;flex-direction:column;background:#fff;border-bottom:1px solid var(--border);padding:22px 24px;gap:18px}
+    .menu-btn{display:block}
+    .nav-cta{display:none}
+    section{padding:64px 0}
+    .hero{padding:110px 0 60px}
+    .features-grid,.verdicts,.steps{grid-template-columns:1fr}
+    .stats-grid{grid-template-columns:repeat(2,1fr);gap:32px}
+    .phone{width:270px;height:560px}
+    .footer-inner{grid-template-columns:1fr;gap:30px}
+    .footer-bottom{flex-direction:column;text-align:center}
+    .hero-stats{gap:26px}
+    .disclaimer-inner{flex-direction:column;gap:14px}
+  }
+  @media(max-width:420px){
+    .phone{width:250px;height:520px}
+    .btn{padding:11px 18px;font-size:13.5px}
+    .hero h1{font-size:38px}
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav id="nav">
+  <div class="container nav-inner">
+    <a href="#" class="logo">
+      <div class="logo-mark">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 012-2h2M17 3h2a2 2 0 012 2v2M21 17v2a2 2 0 01-2 2h-2M7 21H5a2 2 0 01-2-2v-2M7 12h10"/></svg>
+      </div>
+      Fit<em>Scan</em>
+    </a>
+    <div class="nav-links" id="navLinks">
+      <a href="#features">Funciones</a>
+      <a href="#how">Cómo funciona</a>
+      <a href="#verdicts">Veredictos</a>
+      <a href="#macros">Macros</a>
+      <a href="#faq">FAQ</a>
+    </div>
+    <a href="#download" class="btn btn-primary nav-cta">Descargar App</a>
+    <button class="menu-btn" id="menuBtn">☰</button>
+  </div>
+</nav>
+
+<!-- HERO -->
+<header class="hero">
+  <div class="container hero-inner">
+    <div>
+      <div class="badge"><span class="dot"></span> Hecho para los que entrenan en serio</div>
+      <h1>Escanea. Analiza.<br><em>Decide fuerte.</em></h1>
+      <p class="lead">FitScan lee el código de barras de cualquier producto y te da el veredicto inmediato: proteína neta, Nutri-Score, NOVA y macros reales. Tu dieta, sin excusas.</p>
+      <div class="hero-cta">
+        <a href="#download" class="btn btn-primary">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M3 20.5v-17c0-.6.4-1.1.9-1.4l11.6 8.4L3.9 21.9c-.5-.3-.9-.8-.9-1.4zM16.8 12l3.4-2.5c.8.3 1.3 1.1 1.3 1.9v1.2c0 .8-.5 1.6-1.3 1.9L16.8 12zm-1.3-.8L6.8 3.9 15.9 9l-.4 2.2zm0 1.6l.4 2.2-9.1 5.1 8.7-7.3z"/></svg>
+          Descargar Android
+        </a>
+        <a href="#how" class="btn btn-ghost">Ver cómo funciona</a>
+      </div>
+      <div class="hero-stats">
+        <div>
+          <div class="stat-num">+50<span>k</span></div>
+          <div class="stat-lbl">Productos en base</div>
+        </div>
+        <div>
+          <div class="stat-num">1<span>s</span></div>
+          <div class="stat-lbl">Análisis por escaneo</div>
+        </div>
+        <div>
+          <div class="stat-num">100<span>%</span></div>
+          <div class="stat-lbl">Gratis</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PHONE MOCKUP -->
+    <div class="phone-wrap">
+      <div class="phone">
+        <div class="notch"></div>
+        <div class="screen">
+          <div class="ph-header">
+            <span class="back">←</span>
+            <span class="title">Detalles del Producto</span>
+            <span class="book">🔖</span>
+          </div>
+
+          <div class="ph-product">
+            <div class="img">🍫</div>
+            <div class="info">
+              <div class="brand">Nutella, Ferrero</div>
+              <div class="name">Nutella</div>
+              <div class="barcode">3017620422003</div>
+            </div>
+          </div>
+          <div class="ph-tags">
+            <span class="ph-tag e">Nutri-Score E</span>
+            <span class="ph-tag e">NOVA 4 (Ultraprocesado)</span>
+          </div>
+
+          <div class="ph-verdict">
+            <div class="vhead">
+              <div class="vicon">⚙</div>
+              <div>
+                <div class="vtitle">DICTAMEN GYM RAT</div>
+                <div class="vlabel">MODERACIÓN / CHEAT MEAL</div>
+              </div>
+              <div class="stars">★★☆☆☆</div>
+            </div>
+            <div class="vdesc">Denso en azúcares o grasas saturadas; consumir con moderación.</div>
+            <div class="ph-macros">
+              <div class="ph-macro">
+                <div class="lbl">Densidad Proteica</div>
+                <div class="val">4.7%</div>
+                <div class="sub">de calorías totales</div>
+              </div>
+              <div class="ph-macro">
+                <div class="lbl">Proteína Neta</div>
+                <div class="val green">6.3 g</div>
+                <div class="sub">por ración</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="ph-section-title">MACRONUTRIENTES (100g)</div>
+          <div class="ph-grid">
+            <div class="ph-cell">
+              <div class="clbl">🔥 Calorías</div>
+              <div class="cval kcal">539<span style="font-size:9px;color:#94a3b8;font-family:Inter;font-weight:600"> kcal</span></div>
+            </div>
+            <div class="ph-cell">
+              <div class="clbl">🥩 Proteína <span class="pct">4%</span></div>
+              <div class="cval prot">6.3<span style="font-size:9px;color:#94a3b8;font-family:Inter;font-weight:600"> g</span></div>
+              <div class="ph-bar"><i style="width:4%;background:var(--blue)"></i></div>
+            </div>
+            <div class="ph-cell">
+              <div class="clbl">🌾 Carbohidratos <span class="pct">43%</span></div>
+              <div class="cval carb">57.5<span style="font-size:9px;color:#94a3b8;font-family:Inter;font-weight:600"> g</span></div>
+              <div class="ph-bar"><i style="width:43%;background:#84cc16"></i></div>
+            </div>
+            <div class="ph-cell">
+              <div class="clbl">💧 Grasas <span class="pct">52%</span></div>
+              <div class="cval fat">30.9<span style="font-size:9px;color:#94a3b8;font-family:Inter;font-weight:600"> g</span></div>
+              <div class="ph-bar"><i style="width:52%;background:#eab308"></i></div>
+            </div>
+          </div>
+
+          <div class="ph-nav">
+            <div class="ph-nav-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7V5a2 2 0 012-2h2M17 3h2a2 2 0 012 2v2M21 17v2a2 2 0 01-2 2h-2M7 21H5a2 2 0 01-2-2v-2M7 12h10"/></svg>
+              Escanear
+            </div>
+            <div class="ph-nav-item active">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M2 12h20"/></svg>
+              Detalles
+            </div>
+            <div class="ph-nav-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 109-9 9 9 0 00-9 9zm9-5v5l3 3"/></svg>
+              <span class="ph-nav-badge">2</span>
+              Historial
+            </div>
+            <div class="ph-nav-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2s-4 4-4 8a4 4 0 008 0c0-4-4-8-4-8z"/></svg>
+              Macros
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- FEATURES -->
+<section id="features">
+  <div class="container">
+    <div class="section-head">
+      <div class="eyebrow">Funciones</div>
+      <h2>Todo lo que necesitas para comer con estrategia</h2>
+      <p>Cada escaneo te da los datos que importan. Nada de marketing nutricional: números duros, veredicto claro y macros al instante.</p>
+    </div>
+    <div class="features-grid">
+      <div class="feat">
+        <div class="feat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#ea580c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 012-2h2M17 3h2a2 2 0 012 2v2M21 17v2a2 2 0 01-2 2h-2M7 21H5a2 2 0 01-2-2v-2M7 12h10"/></svg></div>
+        <h3>Escaneo por código de barras</h3>
+        <p>Apunta la cámara al código de barras y en menos de un segundo obtén el análisis completo del producto. Sin escribir, sin buscar.</p>
+        <span class="feat-tag">// 1 segundo</span>
+      </div>
+      <div class="feat">
+        <div class="feat-icon blue"><svg viewBox="0 0 24 24" fill="none" stroke="#0284c7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3 7h7l-5.5 4.5L18 21l-6-4-6 4 1.5-7.5L2 9h7z"/></svg></div>
+        <h3>Dictamen Gym Rat</h3>
+        <p>Un veredicto directo: ¿te suma o te resta? Clasificamos cada producto como <b>Comer</b>, <b>Moderación</b> o <b>Evitar</b> según su densidad proteica, azúcares y grasas saturadas.</p>
+        <span class="feat-tag">// veredicto claro</span>
+      </div>
+      <div class="feat">
+        <div class="feat-icon lime"><svg viewBox="0 0 24 24" fill="none" stroke="#65a30d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18M7 14l4-4 4 4 5-5"/></svg></div>
+        <h3>Macros al instante</h3>
+        <p>Calorías, proteína, carbohidratos netos y grasas. Con porcentaje de densidad proteica para saber si vale la pena meterlo en tu dieta.</p>
+        <span class="feat-tag">// 100g o ración</span>
+      </div>
+      <div class="feat">
+        <div class="feat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#ea580c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 3v18"/></svg></div>
+        <h3>Nutri-Score & NOVA</h3>
+        <p>Accede al Nutri-Score oficial (A–E) y a la clasificación NOVA que detecta ultraprocesados. Dos estándares internacionales en un solo escaneo.</p>
+        <span class="feat-tag">// estándar europeo</span>
+      </div>
+      <div class="feat">
+        <div class="feat-icon blue"><svg viewBox="0 0 24 24" fill="none" stroke="#0284c7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M2 12h20M4.9 4.9l14.2 14.2M19.1 4.9L4.9 19.1"/></svg></div>
+        <h3>Calculadora de ración</h3>
+        <p>Ajusta los gramos con un toque y recalcula todos los macros en tiempo real. ¿Quieres 150g? Pulsa y listo, los números se actualizan solos.</p>
+        <span class="feat-tag">// 25g → 200g</span>
+      </div>
+      <div class="feat">
+        <div class="feat-icon lime"><svg viewBox="0 0 24 24" fill="none" stroke="#65a30d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 109-9 9 9 0 00-9 9zm9-5v5l3 3"/></svg></div>
+        <h3>Historial & favoritos</h3>
+        <p>Guarda los productos que consumes, marca tus favoritos y vuelve a consultarlos cuando quieras. Tu memoria nutricional, siempre a mano.</p>
+        <span class="feat-tag">// sin perder nada</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="how" id="how">
+  <div class="container">
+    <div class="section-head">
+      <div class="eyebrow">Cómo funciona</div>
+      <h2>Tres pasos. Cero excusas.</h2>
+      <p>Sin registros eternos, sin menús complicados. Abres, escaneas y decides.</p>
+    </div>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <h3>Escanea</h3>
+        <p>Abre la app, apunta la cámara al código de barras del producto y déjala hacer el resto.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <h3>Analiza</h3>
+        <p>La app cruza el producto con la base de datos y calcula Nutri-Score, NOVA, densidad proteica y macros reales.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <h3>Decide</h3>
+        <p>Recibes el Dictamen Gym Rat: si suma a tu dieta, si va con moderación o si es mejor dejarlo en la estantería.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- VERDICTS -->
+<section id="verdicts">
+  <div class="container">
+    <div class="section-head">
+      <div class="eyebrow">Dictamen Gym Rat</div>
+      <h2>Un veredicto. Cero ambigüedad.</h2>
+      <p>Cada producto recibe una clasificación clara basada en su perfil nutricional. Tú decides si entra o no en tu plan.</p>
+    </div>
+    <div class="verdicts">
+      <div class="vcard green">
+        <div class="vicon">🥩</div>
+        <h3>COMER</h3>
+        <p>Alta densidad proteica, bajo en azúcares y grasas saturadas. Ideal para tu día a día. Suma a tus macros sin culpa.</p>
+        <div class="vlbl">— FUEL LIMPIO</div>
+      </div>
+      <div class="vcard yellow">
+        <div class="vicon">⚠️</div>
+        <h3>MODERACIÓN</h3>
+        <p>Denso en azúcares o grasas saturadas. Perfecto como cheat meal puntual, pero no como base de tu dieta.</p>
+        <div class="vlbl">— CHEAT MEAL</div>
+      </div>
+      <div class="vcard red">
+        <div class="vicon">🚫</div>
+        <h3>EVITAR</h3>
+        <p>Ultraprocesado con nula densidad proteica y carga calórica vacía. No aporta nada a tu objetivo.</p>
+        <div class="vlbl">— FUERA DEL PLAN</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- STATS BAND -->
+<section class="stats-band">
+  <div class="container">
+    <div class="stats-grid">
+      <div class="stat-item">
+        <div class="num">+50<span>k</span></div>
+        <div class="lbl">Productos indexados</div>
+      </div>
+      <div class="stat-item">
+        <div class="num">1<span>s</span></div>
+        <div class="lbl">Por escaneo</div>
+      </div>
+      <div class="stat-item">
+        <div class="num">4<span>+</span></div>
+        <div class="lbl">Métricas por producto</div>
+      </div>
+      <div class="stat-item">
+        <div class="num">100<span>%</span></div>
+        <div class="lbl">Gratis para siempre</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- MACROS DASHBOARD -->
+<section id="macros">
+  <div class="container">
+    <div class="dash-wrap">
+      <div class="dash-visual">
+        <div class="dash-head">
+          <h4>Dashboard Diario</h4>
+          <div class="week">LUN → DOM</div>
+        </div>
+        <div class="dash-row"><span class="rt">🔥 Calorías</span><span class="rv">1480 / 2200 kcal</span></div>
+        <div class="dash-progress"><i class="kcal"></i></div>
+        <div class="dash-row"><span class="rt">🥩 Proteína Muscular</span><span class="rv">131 / 160 g</span></div>
+        <div class="dash-progress"><i class="prot"></i></div>
+        <div class="dash-row"><span class="rt">🌾 Carbohidratos Netos</span><span class="rv">118 / 220 g</span></div>
+        <div class="dash-progress"><i class="carb"></i></div>
+        <div class="dash-row"><span class="rt">💧 Grasas (Sat: 22g)</span><span class="rv">27 / 65 g</span></div>
+        <div class="dash-progress"><i class="fat"></i></div>
+        <div class="dash-empty">Semana: 5 / 7 días activos · Promedio 1840 kcal</div>
+      </div>
+      <div class="dash-copy">
+        <div class="eyebrow">Seguimiento diario</div>
+        <h2>Tu semana, en números claros.</h2>
+        <p>Registra cada producto que escaneas y observa cómo se acumulan tus macros día a día. Ajusta, corrige y llega a tus targets sin adivinar.</p>
+        <ul class="dash-list">
+          <li><span class="check">✓</span> Targets personalizados de calorías, proteína, carbs y grasas</li>
+          <li><span class="check">✓</span> Resumen semanal con promedio diario de kcal y proteína</li>
+          <li><span class="check">✓</span> Detección de grasas saturadas para controlar la calidad de tus fuentes</li>
+          <li><span class="check">✓</span> Historial de cada día con todos los productos registrados</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- LEGAL DISCLAIMER -->
+<section class="disclaimer-band">
+  <div class="disclaimer-inner">
+    <div class="disclaimer-icon">⚖️</div>
+    <div class="disclaimer-text">
+      <h4>Aviso importante sobre la información nutricional</h4>
+      <p><b>FitScan es una herramienta informativa y de consulta.</b> Los datos mostrados provienen de bases de datos abiertas de terceros (como Open Food Facts) y pueden contener errores, estar desactualizados o no reflejar cambios recientes en la formulación de los productos.</p>
+      <p><b>FitScan no sustituye el consejo de un médico, nutricionista o profesional de la salud calificado.</b> La información presentada no constituye diagnóstico, tratamiento ni recomendación médica. Consulta siempre a un profesional antes de modificar tu dieta o plan de entrenamiento. Ver <a href="terminos.html">Términos y Condiciones</a> y <a href="privacidad.html">Política de Privacidad</a>.</p>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta" id="download">
+  <div class="container">
+    <div class="cta-inner">
+      <div class="eyebrow">Empieza hoy</div>
+      <h2>Tu dieta merece <span>datos, no excusas.</span></h2>
+      <p>Descarga FitScan gratis y empieza a escanear en menos de un minuto. Sin suscripciones, sin letra pequeña.</p>
+      <div class="cta-buttons">
+        <a href="#" class="btn-store">
+          <svg viewBox="0 0 24 24" fill="#a3e635"><path d="M17.6 9.48l1.84-3.18c.16-.31.04-.69-.26-.85a.637.637 0 00-.83.22l-1.88 3.24a11.463 11.463 0 00-8.94 0L5.65 5.67a.643.643 0 00-.87-.2c-.28.18-.37.54-.22.83L6.4 9.48A10.78 10.78 0 001 18h22a10.78 10.78 0 00-5.4-8.52zM7 15.25a1.25 1.25 0 110-2.5 1.25 1.25 0 010 2.5zm10 0a1.25 1.25 0 110-2.5 1.25 1.25 0 010 2.5z"/></svg>
+          <div class="txt"><small>Descárgala en</small><strong>Google Play</strong></div>
+        </a>
+        <a href="#features" class="btn btn-ghost" style="padding:14px 26px">Ver funciones primero</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section id="faq">
+  <div class="container">
+    <div class="section-head">
+      <div class="eyebrow">Preguntas frecuentes</div>
+      <h2>Lo que todo usuario pregunta</h2>
+    </div>
+    <div class="faq-list">
+      <details open>
+        <summary>¿Qué es exactamente el "Dictamen Gym Rat"?</summary>
+        <p>Es la clasificación propia de FitScan que combina densidad proteica, azúcares simples y grasas saturadas para darte un veredicto directo: <b>Comer</b>, <b>Moderación</b> o <b>Evitar</b>. Está diseñada específicamente para personas que entrenan y quieren que cada caloría cuente.</p>
+      </details>
+      <details>
+        <summary>¿Es gratis la aplicación?</summary>
+        <p>Sí, <b>FitScan es 100% gratuita por tiempo limitado</b>. Estamos en fase de lanzamiento y queremos que la mayor cantidad de personas posible descubra la app sin barreras: durante este período puedes escanear productos ilimitados, guardar tu historial, configurar tus metas de macros y acceder a <b>todas las funciones actuales sin pagar absolutamente nada</b>.</p>
+        <p>Sin tarjeta de crédito, sin suscripciones ocultas, sin letra pequeña. Cuando en el futuro lancemos funciones premium, los usuarios que se registren ahora serán los primeros en enterarse y tendrán acceso preferencial a los beneficios de lanzamiento. <b>Aprovecha mientras sigue siendo gratis.</b></p>
+      </details>
+      <details>
+        <summary>¿De dónde salen los datos nutricionales?</summary>
+        <p>FitScan se nutre de bases de datos nutricionales estandarizadas y reconocidas internacionalmente, incluyendo <b>Open Food Facts</b> (la mayor base de datos abierta de productos del mundo) y fuentes propias en constante actualización. Cada producto incluye su <b>Nutri-Score oficial (A–E)</b> y la <b>clasificación NOVA</b> de ultraprocesados.</p>
+        <p>Además, nuestra comunidad puede reportar correcciones y actualizaciones, y trabajamos continuamente para ampliar y refinar la base de productos. Así, cada vez que escaneas, obtienes datos <b>confiables, verificables y en mejora constante</b>. Si detectas algún dato que quieras reportar, puedes hacerlo directamente desde la app con un solo toque.</p>
+      </details>
+      <details>
+        <summary>¿Puedo usarla si no estoy en déficit calórico?</summary>
+        <p>Por supuesto. FitScan se adapta a tu objetivo: definición, mantenimiento o volumen. Tú configuras tus targets diarios de calorías, proteína, carbs y grasas.</p>
+      </details>
+      <details>
+        <summary>¿Funciona sin conexión a internet?</summary>
+        <p>Los productos que ya escaneaste quedan guardados en tu historial local, así que puedes consultarlos sin internet. Para escanear productos nuevos necesitas conexión.</p>
+      </details>
+      <details>
+        <summary>¿FitScan reemplaza a un nutricionista?</summary>
+        <p>No. FitScan es una herramienta de consulta informativa. La información que ofrece no constituye consejo médico ni nutricional. Siempre recomendamos consultar con un profesional de la salud calificado antes de realizar cambios significativos en tu alimentación o entrenamiento.</p>
+      </details>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="container">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <a href="#" class="logo">
+          <div class="logo-mark">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 012-2h2M17 3h2a2 2 0 012 2v2M21 17v2a2 2 0 01-2 2h-2M7 21H5a2 2 0 01-2-2v-2M7 12h10"/></svg>
+          </div>
+          Fit<em>Scan</em>
+        </a>
+        <p style="margin-top:14px">La app de escaneo nutricional para los que entrenan en serio. Escanea, analiza y decide con datos reales.</p>
+      </div>
+      <div class="footer-col">
+        <h5>Producto</h5>
+        <a href="#features">Funciones</a>
+        <a href="#how">Cómo funciona</a>
+        <a href="#verdicts">Veredictos</a>
+        <a href="#macros">Macros</a>
+      </div>
+      <div class="footer-col">
+        <h5>Recursos</h5>
+        <a href="#faq">FAQ</a>
+        <a href="#">Blog</a>
+        <a href="#">Contacto</a>
+      </div>
+      <div class="footer-col">
+        <h5>Legal</h5>
+        <a href="terminos.html">Términos y Condiciones</a>
+        <a href="privacidad.html">Política de Privacidad</a>
+        <a href="privacidad.html#cookies">Cookies</a>
+        <a href="terminos.html#aviso">Aviso Legal</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <div>© 2025 FitScan. Todos los derechos reservados.</div>
+      <div class="mono" style="font-size:12px">Hecho con 💪 para los que entrenan en serio</div>
+    </div>
+  </div>
+</footer>
+
+<script>
+  const nav = document.getElementById('nav');
+  window.addEventListener('scroll', () => {
+    nav.classList.toggle('scrolled', window.scrollY > 20);
+  });
+  const menuBtn = document.getElementById('menuBtn');
+  const navLinks = document.getElementById('navLinks');
+  menuBtn.addEventListener('click', () => navLinks.classList.toggle('open'));
+  navLinks.querySelectorAll('a').forEach(a => a.addEventListener('click', () => navLinks.classList.remove('open')));
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.style.opacity = '1';
+        e.target.style.transform = 'translateY(0)';
+      }
+    });
+  }, { threshold: 0.12 });
+  document.querySelectorAll('.feat, .step, .vcard, .stat-item, .dash-visual, .dash-copy').forEach(el => {
+    el.style.opacity = '0';
+    el.style.transform = 'translateY(20px)';
+    el.style.transition = 'opacity .6s ease, transform .6s ease';
+    io.observe(el);
+  });
+  const dashBars = document.querySelectorAll('.dash-progress i');
+  const dashObserver = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        const bar = e.target;
+        const target = bar.classList.contains('kcal') ? '68%' :
+                       bar.classList.contains('prot') ? '82%' :
+                       bar.classList.contains('carb') ? '54%' : '41%';
+        bar.style.width = '0';
+        setTimeout(() => { bar.style.width = target; }, 200);
+        dashObserver.unobserve(bar);
+      }
+    });
+  }, { threshold: 0.4 });
+  dashBars.forEach(b => dashObserver.observe(b));
+</script>
+
+</body>
+</html>
